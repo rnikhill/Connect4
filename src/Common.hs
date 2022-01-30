@@ -18,7 +18,7 @@ type PlayMove = GameState -> IO (Either (Result, Board) GameState)
 data GameState = GameState Int Int Int Player Board deriving (Eq, Show)
 
 instance Show Square where
-  show B = "B"
+  show B = "."
   show (FilledBy p) = show p
 
 instance Ord Player where
