@@ -1,14 +1,10 @@
 module Connect4 where
 
+import Common
 import Control.Monad (forM_)
 import Data.List
 import Data.Maybe
 import GameTree
-
-import Common
-import GameTree
-
-
 
 eitherUntil :: Monad m => (b -> m (Either a b)) -> b -> m a
 eitherUntil action curState = do
@@ -19,13 +15,11 @@ eitherUntil action curState = do
 
 computerMove :: Int -> GameState -> Either (Result, Board) GameState
 computerMove evalDepth gameState@(GameState rows cols winLen toPlay board) =
-  let
-    bestMove = getBestMove gameState evalDepth
-    newState = applyMove gameState bestMove
+  let bestMove = getBestMove gameState evalDepth
+      newState = applyMove gameState bestMove
    in case newState of
-     Nothing -> Right gameState
-     Just x -> x
-
+        Nothing -> Right gameState
+        Just x -> x
 
 -- IO
 humanMove :: GameState -> IO (Either (Result, Board) GameState)
@@ -38,7 +32,6 @@ humanMove gameState@(GameState rows cols winLen toPlay board) = do
       humanMove gameState
     Just validMove -> return validMove
 
-
 genericMove :: PlayMove -> PlayMove -> GameState -> IO (Either (Result, Board) GameState)
 genericMove playO playX gameState@(GameState rows cols winLen toPlay board) = do
   putStrLn "========================="
@@ -47,7 +40,6 @@ genericMove playO playX gameState@(GameState rows cols winLen toPlay board) = do
   case toPlay of
     O -> playO gameState
     X -> playX gameState
-
 
 readBoard :: IO GameState
 readBoard = do
@@ -62,7 +54,7 @@ readBoard = do
 printBoard :: Board -> IO ()
 printBoard b = do
   let nCols = length $ head b
-  forM_ [0..nCols - 1] $ \x -> putStr $ show x ++ " "
+  forM_ [0 .. nCols - 1] $ \x -> putStr $ show x ++ " "
   putStrLn ""
   forM_ b $ \x -> do
     forM_ x $ \x' -> do
@@ -81,14 +73,13 @@ playHuman :: IO ()
 playHuman = do
   gameState <- readBoard
   (winner, endBoard) <- eitherUntil (genericMove humanMove humanMove) gameState
-  revealWinner (winner, endBoard) 
+  revealWinner (winner, endBoard)
 
 playComputer :: IO ()
 playComputer = do
-  gameState <- readBoard 
+  gameState <- readBoard
   putStrLn "Please enter evaluation depth"
   depth <- readLn
   let computerMove' = return . computerMove depth
   (winner, endBoard) <- eitherUntil (genericMove computerMove' humanMove) gameState
   revealWinner (winner, endBoard)
-

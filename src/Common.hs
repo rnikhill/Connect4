@@ -5,7 +5,7 @@ import Data.Maybe
 
 data Player = O | X deriving (Eq, Show)
 
-data Square = FilledBy Player | B deriving Eq
+data Square = FilledBy Player | B deriving (Eq)
 
 data Result = WonBy Player | Draw deriving (Eq, Show)
 
@@ -14,6 +14,7 @@ type Row = [Square]
 type Board = [Row]
 
 type PlayMove = GameState -> IO (Either (Result, Board) GameState)
+
 -- match gameState@(GameState rows cols winLen toPlay board)
 data GameState = GameState Int Int Int Player Board deriving (Eq, Show)
 
@@ -65,8 +66,9 @@ isWinner board winLen player =
 
 -- isFull
 isDraw :: Board -> Bool
-isDraw = all isFull where
-  isFull row = isNothing (elemIndex B row)
+isDraw = all isFull
+  where
+    isFull row = isNothing (elemIndex B row)
 
 replaceAt :: Int -> a -> [a] -> [a]
 replaceAt idx elem lst = take idx lst ++ [elem] ++ drop (idx + 1) lst
@@ -85,6 +87,9 @@ makeMove col player board =
 applyMove :: GameState -> Int -> Maybe (Either (Result, Board) GameState)
 applyMove gameState@(GameState rows cols winLen toPlay board) col = do
   board' <- makeMove col toPlay board
-  if isWinner board' winLen toPlay then return $ Left (WonBy toPlay, board')
-  else if isDraw board' then return $ Left (Draw, board')
-  else return $ Right (GameState rows cols winLen (nextPlayer toPlay) board')
+  if isWinner board' winLen toPlay
+    then return $ Left (WonBy toPlay, board')
+    else
+      if isDraw board'
+        then return $ Left (Draw, board')
+        else return $ Right (GameState rows cols winLen (nextPlayer toPlay) board')

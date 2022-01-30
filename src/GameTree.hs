@@ -39,12 +39,11 @@ getResults xs = [result | (_, MinimaxTree result _) <- xs]
 
 getBestMove :: GameState -> Int -> Int
 getBestMove gameState@(GameState rows cols winLen toPlay board) evalDepth =
-  let 
-      tree = makeGameTree gameState
+  let tree = makeGameTree gameState
    in case minimax evalDepth tree of
-       MinimaxTree result children -> let
-           moves = map fst children `zip` getResults children
-           res = find ((==result) . snd) moves
+        MinimaxTree result children ->
+          let moves = map fst children `zip` getResults children
+              res = find ((== result) . snd) moves
            in case res of
-               Nothing -> 0
-               Just (col, _) -> col
+                Nothing -> 0
+                Just (col, _) -> col
