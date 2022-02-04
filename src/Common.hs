@@ -13,7 +13,8 @@ type Row = [Square]
 
 type Board = [Row]
 
-type PlayMove = GameState -> IO (Either (Result, Board) GameState)
+-- type PlayMove = GameState -> IO (Either (Result, Board) GameState)
+type PlayMove = GameState -> IO Int
 
 -- match gameState@(GameState rows cols winLen toPlay board)
 data GameState = GameState Int Int Int Player Board deriving (Eq, Show)

@@ -14,23 +14,13 @@ eitherUntil action curState = do
     Right b -> eitherUntil action b
 
 computerMove :: Int -> PlayMove
-computerMove evalDepth gameState@(GameState rows cols winLen toPlay board) = do
-  bestMove <- getBestMove gameState evalDepth
-  let newState = applyMove gameState bestMove
-  case newState of
-    Nothing -> return $ Right gameState
-    Just x -> return x
+computerMove evalDepth gameState@(GameState rows cols winLen toPlay board) = getBestMove gameState evalDepth
 
 -- IO
-humanMove :: GameState -> IO (Either (Result, Board) GameState)
+humanMove :: PlayMove
 humanMove gameState@(GameState rows cols winLen toPlay board) = do
   putStrLn $ "Player " ++ show toPlay ++ " please insert column to move"
-  col <- readLn
-  case applyMove gameState col of
-    Nothing -> do
-      putStrLn "Invalid move! Please try again"
-      humanMove gameState
-    Just validMove -> return validMove
+  readLn
 
 genericMove :: PlayMove -> PlayMove -> GameState -> IO (Either (Result, Board) GameState)
 genericMove playO playX gameState@(GameState rows cols winLen toPlay board) = do
@@ -38,9 +28,15 @@ genericMove playO playX gameState@(GameState rows cols winLen toPlay board) = do
   putStrLn "Current state of board:"
   putStrLn $ show toPlay ++ " to play:"
   printBoard board
-  case toPlay of
+  move <- case toPlay of
     O -> playO gameState
     X -> playX gameState
+  case applyMove gameState move of
+    Nothing -> do
+      putStrLn "Invalid move! Please try again"
+      return $ Right gameState
+    Just success -> return success
+
 
 readBoard :: IO GameState
 readBoard = do
@@ -81,5 +77,5 @@ playComputer = do
   gameState <- readBoard
   putStrLn "Please enter evaluation depth"
   depth <- readLn :: IO Int
-  (winner, endBoard) <- eitherUntil (genericMove (computerMove 6) (computerMove 4)) gameState
+  (winner, endBoard) <- eitherUntil (genericMove (computerMove 6) (humanMove)) gameState
   revealWinner (winner, endBoard)
