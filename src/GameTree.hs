@@ -2,10 +2,20 @@ module GameTree where
 
 import Common
 import Data.List
+import System.Random
 
 data GameTree = Leaf (Result, Board) | Node GameState [(Int, GameTree)]
 
 data MinimaxTree = MinimaxTree Result [(Int, MinimaxTree)]
+
+findRandomElement :: (a -> Bool) -> [a] -> IO (Maybe a)
+findRandomElement f xs = do
+  let indices = findIndices f xs
+  indInd <- randomRIO (0, length indices - 1)
+  let index = indices !! indInd
+  case indices of
+    [] -> return Nothing
+    _ -> return $ Just $ xs !! index
 
 makeGameTree :: GameState -> GameTree
 makeGameTree gameState@(GameState rows cols winLen toPlay board) =
@@ -37,13 +47,13 @@ minimax evalDepth gameTree = case gameTree of
 getResults :: [(Int, MinimaxTree)] -> [Result]
 getResults xs = [result | (_, MinimaxTree result _) <- xs]
 
-getBestMove :: GameState -> Int -> Int
-getBestMove gameState@(GameState rows cols winLen toPlay board) evalDepth =
+getBestMove :: GameState -> Int -> IO Int
+getBestMove gameState@(GameState rows cols winLen toPlay board) evalDepth = do
   let tree = makeGameTree gameState
-   in case minimax evalDepth tree of
-        MinimaxTree result children ->
-          let moves = map fst children `zip` getResults children
-              res = find ((== result) . snd) moves
-           in case res of
-                Nothing -> 0
-                Just (col, _) -> col
+  case minimax evalDepth tree of
+    MinimaxTree result children -> do
+      let moves = map fst children `zip` getResults children
+      res <- findRandomElement ((== result) . snd) moves
+      case res of
+        Nothing -> return 0
+        Just (col, _) -> return col

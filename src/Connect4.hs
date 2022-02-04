@@ -13,13 +13,13 @@ eitherUntil action curState = do
     Left a -> return a
     Right b -> eitherUntil action b
 
-computerMove :: Int -> GameState -> Either (Result, Board) GameState
-computerMove evalDepth gameState@(GameState rows cols winLen toPlay board) =
-  let bestMove = getBestMove gameState evalDepth
-      newState = applyMove gameState bestMove
-   in case newState of
-        Nothing -> Right gameState
-        Just x -> x
+computerMove :: Int -> PlayMove
+computerMove evalDepth gameState@(GameState rows cols winLen toPlay board) = do
+  bestMove <- getBestMove gameState evalDepth
+  let newState = applyMove gameState bestMove
+  case newState of
+    Nothing -> return $ Right gameState
+    Just x -> return x
 
 -- IO
 humanMove :: GameState -> IO (Either (Result, Board) GameState)
@@ -36,6 +36,7 @@ genericMove :: PlayMove -> PlayMove -> GameState -> IO (Either (Result, Board) G
 genericMove playO playX gameState@(GameState rows cols winLen toPlay board) = do
   putStrLn "========================="
   putStrLn "Current state of board:"
+  putStrLn $ show toPlay ++ " to play:"
   printBoard board
   case toPlay of
     O -> playO gameState
@@ -79,7 +80,6 @@ playComputer :: IO ()
 playComputer = do
   gameState <- readBoard
   putStrLn "Please enter evaluation depth"
-  depth <- readLn
-  let computerMove' = return . computerMove depth
-  (winner, endBoard) <- eitherUntil (genericMove computerMove' humanMove) gameState
+  depth <- readLn :: IO Int
+  (winner, endBoard) <- eitherUntil (genericMove (computerMove 6) (computerMove 4)) gameState
   revealWinner (winner, endBoard)
